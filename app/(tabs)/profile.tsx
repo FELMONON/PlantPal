@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Bell, Shield, CircleHelp as HelpCircle, Star, Share2, Settings, ChevronRight, Heart, Leaf, Droplets, Calendar } from 'lucide-react-native';
-import { useFocusEffect } from 'expo-router';
+import { User, Bell, Shield, CircleHelp as HelpCircle, Star, Share2, Settings, ChevronRight, Heart, Leaf, Droplets, Calendar, Edit3 } from 'lucide-react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { PlantStorage } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -13,8 +14,18 @@ import Animated, {
   interpolate
 } from 'react-native-reanimated';
 
+interface UserProfile {
+  full_name?: string;
+  username?: string;
+  bio?: string;
+  location?: string;
+  avatar_url?: string;
+}
+
 export default function ProfileScreen() {
+  const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile>({});
   const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
     totalPlants: 0,
@@ -44,9 +55,28 @@ export default function ProfileScreen() {
     }
   };
 
+  const loadUserProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, username, bio, location, avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadStats();
+      loadUserProfile();
     }, [])
   );
 
@@ -73,7 +103,7 @@ export default function ProfileScreen() {
     {
       title: 'Account',
       items: [
-        { icon: User, label: 'Edit Profile', action: () => {} },
+        { icon: Edit3, label: 'Edit Profile', action: () => router.push('/edit-profile') },
         { icon: Bell, label: 'Notifications', action: () => {}, hasSwitch: true },
         { icon: Shield, label: 'Privacy', action: () => {} },
       ]
@@ -111,10 +141,15 @@ export default function ProfileScreen() {
               </Animated.Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.email || 'Plant Enthusiast'}</Text>
+              <Text style={styles.userName}>
+                {userProfile.full_name || userProfile.username || user?.email || 'Plant Enthusiast'}
+              </Text>
               <Text style={[styles.userLevel, { color: collectionLevel.color }]}>
                 {collectionLevel.level}
               </Text>
+              {userProfile.location && (
+                <Text style={styles.userLocation}>📍 {userProfile.location}</Text>
+              )}
               <Text style={styles.joinDate}>
                 {stats.totalPlants > 0 
                   ? `${stats.totalPlants} plant${stats.totalPlants === 1 ? '' : 's'} in garden`
@@ -124,6 +159,13 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+
+        {/* Bio Section */}
+        {userProfile.bio && (
+          <View style={styles.bioSection}>
+            <Text style={styles.bioText}>{userProfile.bio}</Text>
+          </View>
+        )}
 
         {/* Garden Stats */}
         {stats.totalPlants > 0 && (
@@ -293,6 +335,24 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#9CA3AF',
     marginTop: 4,
+  },
+  userLocation: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  bioSection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  bioText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#374151',
+    lineHeight: 24,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   statsContainer: {
     paddingHorizontal: 24,
