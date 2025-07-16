@@ -175,8 +175,8 @@ export default function CameraScreen() {
     } catch (error) {
       console.error('Analysis error:', error);
       Alert.alert(
-        'Analysis Failed', 
-        'Failed to analyze the plant. Please try again with a clearer photo.',
+        'Analysis Failed',
+        'Failed to analyze the plant. Please check your internet connection and try again with a clearer photo.',
         [{ text: 'Try Again', onPress: retakePicture }]
       );
     } finally {
