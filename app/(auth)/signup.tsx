@@ -67,16 +67,26 @@ export default function SignUpScreen() {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password);
+    const { data, error } = await signUp(email, password);
     
     if (error) {
       Alert.alert('Sign Up Failed', error.message);
     } else {
-      Alert.alert(
-        'Success!',
-        'Account created successfully. You can now sign in.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/signin') }]
-      );
+      if (data.user && !data.session) {
+        // Email confirmation required
+        Alert.alert(
+          'Check Your Email',
+          'Please check your email and click the confirmation link to activate your account.',
+          [{ text: 'OK', onPress: () => router.replace('/(auth)/signin') }]
+        );
+      } else {
+        // Auto sign in successful
+        Alert.alert(
+          'Welcome!',
+          'Account created successfully. You are now signed in.',
+          [{ text: 'OK', onPress: () => router.replace('/(tabs)') }]
+        );
+      }
     }
     setLoading(false);
   };

@@ -48,7 +48,15 @@ export default function SignInScreen() {
     const { error } = await signIn(email, password);
     
     if (error) {
-      Alert.alert('Sign In Failed', error.message);
+      if (error.message.includes('Email not confirmed')) {
+        Alert.alert(
+          'Email Not Confirmed',
+          'Please check your email and click the confirmation link before signing in.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Sign In Failed', error.message);
+      }
     } else {
       router.replace('/(tabs)');
     }
