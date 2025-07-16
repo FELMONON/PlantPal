@@ -19,15 +19,18 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    console.log('RootLayout: Fonts loaded:', fontsLoaded, 'Font error:', !!fontError);
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
+    console.log('RootLayout: Waiting for fonts...');
     return null;
   }
 
+  console.log('RootLayout: Rendering with AuthProvider...');
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>

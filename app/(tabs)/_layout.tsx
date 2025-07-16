@@ -10,16 +10,20 @@ export default function TabLayout() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('TabLayout: Auth state changed - user:', !!user, 'loading:', loading);
     if (!loading && !user) {
+      console.log('TabLayout: No user, redirecting to signin...');
       router.replace('/(auth)/signin');
     }
   }, [user, loading]);
 
   if (loading) {
+    console.log('TabLayout: Still loading auth...');
     return null; // Or a loading screen
   }
 
   if (!user) {
+    console.log('TabLayout: No user found, should redirect...');
     return null;
   }
 
