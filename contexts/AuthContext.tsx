@@ -75,6 +75,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         setLoading(false);
+        
+        // Handle specific error types
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: { message: 'Invalid email or password. Please check your credentials or sign up for a new account.' } };
+        } else if (error.message.includes('Email not confirmed')) {
+          return { error: { message: 'Please check your email and click the confirmation link before signing in.' } };
+        } else if (error.message.includes('Too many requests')) {
+          return { error: { message: 'Too many sign-in attempts. Please wait a few minutes and try again.' } };
+        } else if (error.message.includes('User not found')) {
+          return { error: { message: 'No account found with this email. Please sign up first.' } };
+        }
+        
         return { error };
       }
       

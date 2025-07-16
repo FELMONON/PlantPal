@@ -74,7 +74,23 @@ export default function SignInScreen() {
             [{ text: 'OK' }]
           );
         } else if (error.message.includes('Invalid login credentials')) {
-          Alert.alert('Sign In Failed', 'Invalid email or password. Please check your credentials and try again.');
+          Alert.alert(
+            'Sign In Failed', 
+            'Invalid email or password. Please check your credentials or sign up for a new account.',
+            [
+              { text: 'Try Again', style: 'cancel' },
+              { text: 'Sign Up', onPress: () => router.push('/(auth)/signup') }
+            ]
+          );
+        } else if (error.message.includes('No account found')) {
+          Alert.alert(
+            'Account Not Found',
+            'No account exists with this email address.',
+            [
+              { text: 'Try Again', style: 'cancel' },
+              { text: 'Sign Up', onPress: () => router.push('/(auth)/signup') }
+            ]
+          );
         } else {
           Alert.alert('Sign In Failed', error.message);
         }
