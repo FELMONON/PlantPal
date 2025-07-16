@@ -68,12 +68,27 @@ export default function SignUpScreen() {
 
     setLoading(true);
     console.log('SignUp: Starting signup process...');
+    console.log('SignUp: Environment check - URL exists:', !!process.env.EXPO_PUBLIC_SUPABASE_URL);
+    console.log('SignUp: Environment check - Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
     
     const { data, error } = await signUp(email, password);
     
     if (error) {
       console.log('SignUp: Error occurred:', error.message);
-      Alert.alert('Sign Up Failed', error.message);
+      
+      // Handle mobile-specific errors
+      if (error.message.includes('Unable to connect') || 
+          error.message.includes('network') || 
+          error.message.includes('fetch') ||
+          error.message.includes('timeout')) {
+        Alert.alert(
+          'Connection Error',
+          'Unable to connect to the authentication service. Please check your internet connection and try again.\n\nNote: Make sure you have a stable internet connection on your mobile device.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Sign Up Failed', error.message);
+      }
       setLoading(false);
     } else {
       console.log('SignUp: Success, data:', !!data);

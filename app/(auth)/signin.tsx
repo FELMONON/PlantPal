@@ -46,11 +46,13 @@ export default function SignInScreen() {
 
     setLoading(true);
     console.log('SignIn: Starting signin process...');
+    console.log('SignIn: Environment check - URL exists:', !!process.env.EXPO_PUBLIC_SUPABASE_URL);
+    console.log('SignIn: Environment check - Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
     
     try {
-      // Add timeout to prevent hanging
+      // Add longer timeout for mobile networks
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+        setTimeout(() => reject(new Error('Request timeout')), 15000)
       );
       
       const signInPromise = signIn(email, password);
@@ -61,10 +63,14 @@ export default function SignInScreen() {
         console.log('SignIn: Error occurred:', error.message);
         
         // Handle specific error types
-        if (error.message.includes('Unable to connect') || error.message.includes('network') || error.message.includes('fetch')) {
+        if (error.message.includes('Unable to connect') || 
+            error.message.includes('network') || 
+            error.message.includes('fetch') ||
+            error.message.includes('timeout') ||
+            error.message.includes('Failed to fetch')) {
           Alert.alert(
             'Connection Error',
-            'Unable to connect to the authentication service. Please check your internet connection and try again.',
+            'Unable to connect to the authentication service. Please check your internet connection and try again.\n\nNote: Make sure you have a stable internet connection on your mobile device.',
             [{ text: 'OK' }]
           );
         } else if (error.message.includes('Email not confirmed')) {

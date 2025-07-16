@@ -22,13 +22,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AuthContext: Initializing...');
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthContext: Initial session:', session ? 'Found' : 'None');
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Add a small delay to ensure proper initialization on mobile
+    const initializeAuth = async () => {
+      try {
+        // Wait a bit for mobile to be ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.log('AuthContext: Error getting initial session:', error.message);
+        }
+        
+        console.log('AuthContext: Initial session:', session ? 'Found' : 'None');
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.log('AuthContext: Error during initialization:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -36,7 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('AuthContext: Auth state changed:', event, session ? 'Session exists' : 'No session');
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        
+        // Only set loading to false after a successful auth change
+        if (event !== 'INITIAL_SESSION') {
+          setLoading(false);
+        }
       }
     );
 

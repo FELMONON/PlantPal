@@ -13,12 +13,19 @@ export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     flowType: 'pkce',
+    storage: undefined, // Use default AsyncStorage for mobile
+    storageKey: 'plantpal-auth-token',
   },
   global: {
     headers: {
       'X-Client-Info': 'plantpal-mobile',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2,
     },
   },
 });
