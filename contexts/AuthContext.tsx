@@ -64,6 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Attempting signin for:', email);
     setLoading(true);
     
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
       console.log('AuthContext: Supabase response received');
       console.log('AuthContext: Signin result:', error ? `Error: ${error.message}` : 'Success');
       
