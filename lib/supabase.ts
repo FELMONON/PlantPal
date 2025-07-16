@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -15,7 +16,7 @@ export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
     persistSession: true,
     detectSessionInUrl: false,
     flowType: 'pkce',
-    storage: undefined, // Use default AsyncStorage for mobile
+    storage: AsyncStorage,
     storageKey: 'plantpal-auth-token',
   },
   global: {
