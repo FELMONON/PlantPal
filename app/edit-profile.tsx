@@ -62,7 +62,17 @@ export default function EditProfileScreen() {
       }
 
       if (data) {
-        setProfile(data);
+        setProfile({
+          ...data,
+          full_name: data.full_name || '',
+          username: data.username || '',
+          bio: data.bio || '',
+          location: data.location || '',
+          phone: data.phone || '',
+          birth_date: data.birth_date || '',
+          avatar_url: data.avatar_url || '',
+          website: data.website || '',
+        });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
