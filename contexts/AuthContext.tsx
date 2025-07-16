@@ -160,8 +160,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       signUp,
       signIn,
-      signOut,
-    }}>
+      signOut
+    }}
+    >
       {children}
     </AuthContext.Provider>
   );
