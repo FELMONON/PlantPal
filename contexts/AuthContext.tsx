@@ -46,10 +46,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         emailRedirectTo: undefined, // Disable email confirmation for mobile
       }
     });
-    
-    console.log('AuthContext: Signup result:', { data: !!data, error: error?.message });
-    setLoading(false);
-    return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -57,16 +53,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     
     try {
+      // Add timeout for mobile networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
+      clearTimeout(timeoutId);
       console.log('AuthContext: Supabase response received');
       console.log('AuthContext: Signin result:', error ? `Error: ${error.message}` : 'Success');
       
       if (error) {
         setLoading(false);
+        
+        // Handle 502 and server errors
+        if (error.message.includes('502') || error.message.includes('Bad Gateway')) {
+          return { error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
+        }
         
         // Handle specific error types
         if (error.message.includes('Invalid login credentials')) {
@@ -95,7 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Check if it's a network/connection error
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('Failed to fetch')) {
+      if (errorMessage.includes('fetch') || 
+          errorMessage.includes('network') || 
+          errorMessage.includes('Failed to fetch') ||
+          errorMessage.includes('502') ||
+          errorMessage.includes('Bad Gateway') ||
+          errorMessage.includes('aborted')) {
         return { error: { message: 'Unable to connect to authentication service. Please check your internet connection and try again.' } };
       }
       
@@ -107,13 +118,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Signing out...');
     setLoading(true);
     await supabase.auth.signOut();
-    setLoading(false);
-  };
-
-  return (
-    <AuthContext.Provider value={{
-      user,
-      session,
+    try {
+      // Add timeout for mobile networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: undefined, // Disable email confirmation for mobile
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('AuthContext: Signup result:', { data: !!data, error: error?.message });
+      setLoading(false);
+      
+      if (error) {
+        // Handle 502 and server errors
+        if (error.message.includes('502') || error.message.includes('Bad Gateway')) {
+          return { data, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
+        }
+      }
+      
+      return { data, error };
+    } catch (error) {
+      console.log('AuthContext: Signup exception occurred');
+      console.log('AuthContext: Exception details:', error instanceof Error ? error.message : String(error));
+      setLoading(false);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('502') || 
+          errorMessage.includes('Bad Gateway') ||
+          errorMessage.includes('aborted') ||
+          errorMessage.includes('fetch')) {
+        return { data: null, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
+      }
+      
+      return { data: null, error: { message: 'Signup failed. Please try again.' } };
+    }
       loading,
       signUp,
       signIn,
