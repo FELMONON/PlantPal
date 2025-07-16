@@ -1,6 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-url-polyfill/auto';
+
+// Conditionally import AsyncStorage only in client-side environments
+const getStorage = () => {
+  if (typeof window !== 'undefined') {
+    // We're in a browser or React Native environment
+    try {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      return AsyncStorage;
+    } catch (error) {
+      // Fallback to a dummy storage for web environments
+      return {
+        getItem: async () => null,
+        setItem: async () => {},
+        removeItem: async () => {},
+      };
+    }
+  }
+  // We're in a Node.js environment (SSR), provide dummy storage
+  return {
+    getItem: async () => null,
+    setItem: async () => {},
+    removeItem: async () => {},
+  };
+};
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,7 +40,7 @@ export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
     persistSession: true,
     detectSessionInUrl: false,
     flowType: 'pkce',
-    storage: AsyncStorage,
+    storage: getStorage(),
     storageKey: 'plantpal-auth-token',
   },
   global: {
