@@ -46,8 +46,6 @@ export const supabase = createClient(supabaseUrl!, supabaseAnonKey!, {
   global: {
     headers: {
       'X-Client-Info': 'plantpal-mobile',
-      'apikey': supabaseAnonKey!,
-      'Authorization': `Bearer ${supabaseAnonKey!}`,
     },
     fetch: (url, options = {}) => {
       return fetch(url, {
