@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
     // Call Gemini AI API
     console.log('Making Gemini API request...');
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           {
             parts: [
               {
-                  text: `Analyze this image carefully and identify what it contains.
+                text: `Analyze this image carefully and identify what it contains.
 
 INSTRUCTIONS:
 1. First, determine if the image contains a plant, flower, tree, or any botanical specimen that can be cared for.
@@ -135,12 +135,20 @@ Be specific and accurate in your assessment. If you're not confident about the e
     });
 
     if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error('Gemini API Error:', geminiResponse.status, errorText);
+      let errorDetails;
+      try {
+        errorDetails = await geminiResponse.json();
+        console.error('Gemini API Error:', geminiResponse.status, errorDetails);
+      } catch (parseError) {
+        const errorText = await geminiResponse.text();
+        console.error('Gemini API Error:', geminiResponse.status, errorText);
+        errorDetails = { error: { message: errorText } };
+      }
+      
       return Response.json({
         success: false,
         error: 'GEMINI_API_ERROR',
-        message: `Gemini API error: ${geminiResponse.status}`
+        message: `Gemini API error: ${geminiResponse.status} - ${errorDetails?.error?.message || 'Unknown error'}`
       }, { 
         status: 500,
         headers: corsHeaders
