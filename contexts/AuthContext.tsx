@@ -39,13 +39,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Attempting signup for:', email);
     setLoading(true);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: undefined, // Disable email confirmation for mobile
+    try {
+      // Add timeout for mobile networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: undefined, // Disable email confirmation for mobile
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      console.log('AuthContext: Signup result:', { data: !!data, error: error?.message });
+      setLoading(false);
+      
+      if (error) {
+        // Handle 502 and server errors
+        if (error.message.includes('502') || error.message.includes('Bad Gateway')) {
+          return { data, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
+        }
       }
-    });
+      
+      return { data, error };
+    } catch (error) {
+      console.log('AuthContext: Signup exception occurred');
+      console.log('AuthContext: Exception details:', error instanceof Error ? error.message : String(error));
+      setLoading(false);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('502') || 
+          errorMessage.includes('Bad Gateway') ||
+          errorMessage.includes('aborted') ||
+          errorMessage.includes('fetch')) {
+        return { data: null, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
+      }
+      
+      return { data: null, error: { message: 'Signup failed. Please try again.' } };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
@@ -118,46 +151,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Signing out...');
     setLoading(true);
     await supabase.auth.signOut();
-    try {
-      // Add timeout for mobile networks
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: undefined, // Disable email confirmation for mobile
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      console.log('AuthContext: Signup result:', { data: !!data, error: error?.message });
-      setLoading(false);
-      
-      if (error) {
-        // Handle 502 and server errors
-        if (error.message.includes('502') || error.message.includes('Bad Gateway')) {
-          return { data, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
-        }
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.log('AuthContext: Signup exception occurred');
-      console.log('AuthContext: Exception details:', error instanceof Error ? error.message : String(error));
-      setLoading(false);
-      
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('502') || 
-          errorMessage.includes('Bad Gateway') ||
-          errorMessage.includes('aborted') ||
-          errorMessage.includes('fetch')) {
-        return { data: null, error: { message: 'Server temporarily unavailable. Please try again in a few moments.' } };
-      }
-      
-      return { data: null, error: { message: 'Signup failed. Please try again.' } };
-    }
+  };
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      session,
       loading,
       signUp,
       signIn,
