@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Bell, Shield, CircleHelp as HelpCircle, Star, Share2, Settings, ChevronRight, Heart, Leaf, Droplets, Calendar, Edit3 } from 'lucide-react-native';
+import { User, Bell, Shield, CircleHelp as HelpCircle, Star, Share2, Settings, ChevronRight, Heart, Leaf, Droplets, Calendar, CreditCard as Edit3 } from 'lucide-react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { PlantStorage } from '@/utils/storage';
 import { useAuth } from '@/contexts/AuthContext';
