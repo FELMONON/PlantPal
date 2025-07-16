@@ -47,25 +47,44 @@ export default function SignInScreen() {
     setLoading(true);
     console.log('SignIn: Starting signin process...');
     
-    const { error } = await signIn(email, password);
-    
-    if (error) {
-      console.log('SignIn: Error occurred:', error.message);
-      if (error.message.includes('Email not confirmed')) {
-        Alert.alert(
-          'Email Not Confirmed',
-          'Please check your email and click the confirmation link before signing in.',
-          [{ text: 'OK' }]
-        );
-      } else if (error.message.includes('Invalid login credentials')) {
-        Alert.alert('Sign In Failed', 'Invalid email or password. Please check your credentials and try again.');
+    try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const signInPromise = signIn(email, password);
+      
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
+      
+      if (error) {
+        console.log('SignIn: Error occurred:', error.message);
+        if (error.message.includes('Email not confirmed')) {
+          Alert.alert(
+            'Email Not Confirmed',
+            'Please check your email and click the confirmation link before signing in.',
+            [{ text: 'OK' }]
+          );
+        } else if (error.message.includes('Invalid login credentials')) {
+          Alert.alert('Sign In Failed', 'Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('timeout')) {
+          Alert.alert('Connection Timeout', 'The request took too long. Please check your internet connection and try again.');
+        } else {
+          Alert.alert('Sign In Failed', error.message);
+        }
+        setLoading(false);
       } else {
-        Alert.alert('Sign In Failed', error.message);
+        console.log('SignIn: Success, waiting for auth state change...');
+        // Set a backup timeout in case auth state change doesn't fire
+        setTimeout(() => {
+          console.log('SignIn: Backup timeout - stopping loading state');
+          setLoading(false);
+        }, 3000);
       }
+    } catch (error: any) {
+      console.error('SignIn: Exception:', error);
+      Alert.alert('Sign In Failed', 'Something went wrong. Please try again.');
       setLoading(false);
-    } else {
-      console.log('SignIn: Success, waiting for auth state change...');
-      // Don't set loading to false or navigate here - let the auth context handle it
     }
   };
 

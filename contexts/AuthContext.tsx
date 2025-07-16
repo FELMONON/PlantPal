@@ -64,19 +64,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Attempting signin for:', email);
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    console.log('AuthContext: Signin result:', error ? `Error: ${error.message}` : 'Success');
-    
-    if (error) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      console.log('AuthContext: Signin result:', error ? `Error: ${error.message}` : 'Success');
+      
+      if (error) {
+        setLoading(false);
+        return { error };
+      }
+      
+      // If we get here and have a session, auth state change will handle the rest
+      if (data.session) {
+        console.log('AuthContext: Session received, waiting for auth state change...');
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error('AuthContext: Signin exception:', error);
       setLoading(false);
+      return { error: { message: 'Network error. Please try again.' } };
     }
-    // Don't set loading to false on success - let the auth state change handle it
-    
-    return { error };
   };
 
   const signOut = async () => {

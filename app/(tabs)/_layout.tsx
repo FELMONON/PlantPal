@@ -15,7 +15,7 @@ export default function TabLayout() {
       console.log('TabLayout: No user, redirecting to signin...');
       router.replace('/(auth)/signin');
     }
-  }, [user, loading]);
+  }, [user, loading, router]);
 
   if (loading) {
     console.log('TabLayout: Still loading auth...');
