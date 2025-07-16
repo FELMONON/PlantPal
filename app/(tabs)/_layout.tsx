@@ -1,8 +1,28 @@
 import { Tabs } from 'expo-router';
 import { Camera, Leaf, BookOpen, User } from 'lucide-react-native';
 import { Platform } from 'react-native';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 
 export default function TabLayout() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/(auth)/signin');
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return null; // Or a loading screen
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{

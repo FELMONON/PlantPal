@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, Bell, Shield, CircleHelp as HelpCircle, Star, Share2, Settings, ChevronRight, Heart, Leaf, Droplets, Calendar } from 'lucide-react-native';
 import { useFocusEffect } from 'expo-router';
 import { PlantStorage } from '@/utils/storage';
+import { useAuth } from '@/contexts/AuthContext';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -14,6 +15,7 @@ import Animated, {
 
 export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
     totalPlants: 0,
     healthyPlants: 0,
@@ -57,6 +59,14 @@ export default function ProfileScreen() {
     return { level: 'New Gardener', emoji: '🌱', color: '#9CA3AF' };
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const collectionLevel = getCollectionLevel(stats.totalPlants);
 
   const menuSections = [
@@ -75,6 +85,7 @@ export default function ProfileScreen() {
         { icon: Share2, label: 'Share App', action: () => {} },
         { icon: HelpCircle, label: 'Help', action: () => {} },
         { icon: Settings, label: 'Settings', action: () => {} },
+        { icon: User, label: 'Sign Out', action: handleSignOut },
       ]
     }
   ];
@@ -100,7 +111,7 @@ export default function ProfileScreen() {
               </Animated.Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>Plant Enthusiast</Text>
+              <Text style={styles.userName}>{user?.email || 'Plant Enthusiast'}</Text>
               <Text style={[styles.userLevel, { color: collectionLevel.color }]}>
                 {collectionLevel.level}
               </Text>
