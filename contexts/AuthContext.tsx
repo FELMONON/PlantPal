@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error: null };
     } catch (error) {
-      console.error('AuthContext: Signin exception:', error);
+      console.error('AuthContext: Signin exception:', error instanceof Error ? error.message : String(error));
       setLoading(false);
       return { error: { message: 'Network error. Please try again.' } };
     }
