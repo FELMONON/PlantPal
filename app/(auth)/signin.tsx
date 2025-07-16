@@ -59,7 +59,15 @@ export default function SignInScreen() {
       
       if (error) {
         console.log('SignIn: Error occurred:', error.message);
-        if (error.message.includes('Email not confirmed')) {
+        
+        // Handle specific error types
+        if (error.message.includes('Unable to connect') || error.message.includes('network') || error.message.includes('fetch')) {
+          Alert.alert(
+            'Connection Error',
+            'Unable to connect to the authentication service. Please check your internet connection and try again.',
+            [{ text: 'OK' }]
+          );
+        } else if (error.message.includes('Email not confirmed')) {
           Alert.alert(
             'Email Not Confirmed',
             'Please check your email and click the confirmation link before signing in.',
@@ -67,8 +75,6 @@ export default function SignInScreen() {
           );
         } else if (error.message.includes('Invalid login credentials')) {
           Alert.alert('Sign In Failed', 'Invalid email or password. Please check your credentials and try again.');
-        } else if (error.message.includes('timeout')) {
-          Alert.alert('Connection Timeout', 'The request took too long. Please check your internet connection and try again.');
         } else {
           Alert.alert('Sign In Failed', error.message);
         }
@@ -82,8 +88,11 @@ export default function SignInScreen() {
         }, 3000);
       }
     } catch (error: any) {
-      console.error('SignIn: Exception:', error);
-      Alert.alert('Sign In Failed', 'Something went wrong. Please try again.');
+      console.log('SignIn: Exception occurred:', error?.message || 'Unknown error');
+      Alert.alert(
+        'Connection Error', 
+        'Unable to connect to the authentication service. Please check your internet connection and try again.'
+      );
       setLoading(false);
     }
   };

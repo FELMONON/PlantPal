@@ -64,12 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Attempting signin for:', email);
     setLoading(true);
     
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
+      console.log('AuthContext: Supabase response received');
       console.log('AuthContext: Signin result:', error ? `Error: ${error.message}` : 'Success');
       
       if (error) {
@@ -84,9 +79,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return { error: null };
     } catch (error) {
-      console.error('AuthContext: Signin exception:', error instanceof Error ? error.message : String(error));
+      console.log('AuthContext: Signin exception occurred');
+      console.log('AuthContext: Exception details:', error instanceof Error ? error.message : String(error));
       setLoading(false);
-      return { error: { message: 'Network error. Please try again.' } };
+      
+      // Check if it's a network/connection error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('Failed to fetch')) {
+        return { error: { message: 'Unable to connect to authentication service. Please check your internet connection and try again.' } };
+      }
+      
+      return { error: { message: 'Authentication failed. Please try again.' } };
     }
   };
 
